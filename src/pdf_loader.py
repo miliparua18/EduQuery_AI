@@ -9,5 +9,5 @@ def load_textbook(file_path):
             "text" : page.get_text(),
             "metadata" : {"page": i+1}
         })
-        return pages 
+    return pages 
         
