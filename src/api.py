@@ -2,7 +2,7 @@ from fastapi import FastAPI, UploadFile, File, Query
 import shutil, os
 from .pdf_loader import load_textbook
 from .chunker import get_chunks
-from .embeddings import build_vector_db, get_existing_db
+from .embeddings import built_vector_db, get_existing_db
 from .retrievers import get_filtered_retriever
 from .Chain import create_tutor_chain
 
@@ -18,7 +18,7 @@ async def upload_pdf(file: UploadFile = File(...), subject: str = Query(...)):
     
     pages = load_textbook(path)
     chunks = get_chunks(pages, subject)
-    vector_db = build_vector_db(chunks)
+    vector_db = built_vector_db(chunks)
     return {"message": f"Successfully indexed {subject}"}
 
 @app.get("/ask")
