@@ -12,7 +12,7 @@ vector_db = get_existing_db()
 @app.post("/upload")
 async def upload_pdf(file: UploadFile = File(...), subject: str = Query(...)):
     global vector_db
-    path = f"data/pdfs/{file.filename}"
+    path = f"data/pdf/{file.filename}"
     with open(path, "wb") as buffer:
         shutil.copyfileobj(file.file, buffer)
     
