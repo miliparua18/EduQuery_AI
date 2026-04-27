@@ -15,17 +15,23 @@ llm = HuggingFaceEndpoint(
 model = ChatHuggingFace(llm = llm)
 
 template = """
-You are an expert University Tutor for CSE students.
-Use the following pieces of retrieved context to answer the question. 
-
-RULES:
-1. If the answer isn't in the context, say you don't know based on the textbooks.
-2. If there occurs context ambiguity  then check if the context mentions 
-   both Data Structures and Machine Learning trees and ask for clarification.
-3. Always cite the page number.
+You are an expert University Tutor. 
+Review the provided context carefully.
 
 Context: {context}
 Question: {question}
+
+INSTRUCTIONS:
+1. If the question is foundational (UG level), provide a clear, structured explanation 
+   with definitions and simple examples.
+2. If the question is specialized or theoretical (PG level), provide a rigorous 
+   technical analysis, mentioning complexity, trade-offs, or mathematical logic 
+   found in the text.
+3. If the context contains information from two DIFFERENT subjects (e.g., DSA and ML) for the same term, 
+   do not mix them. Instead, explain that the term exists in both and ask the user to clarify.
+4. If the context only covers one subject, provide a detailed grounded answer.
+5. If the context does not contain the answer, politely state you don't have that info.
+
 
 Answer:"""
 
