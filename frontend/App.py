@@ -8,7 +8,7 @@ st.title("🎓 EduQuery AI: Student Textbook Assistant")
 if "messages" not in st.session_state:
     st.session_state.messages = []
 
-st.sidebar.header("Settings")
+
 subject = st.sidebar.selectbox("Filter Subject", ["All", "DBMS", "DSA", "ML"])
 
 if st.sidebar.button("Clear History"):
@@ -23,7 +23,7 @@ for message in st.session_state.messages:
             with st.expander("📊 Source Citations (Auto-Detected)"):
                 st.dataframe(pd.DataFrame(message["citations"]), width="stretch", hide_index=True)
 
-user_query = st.chat_input("Ask about a concept...")
+user_query = st.chat_input("Ask Questions...")
 
 if user_query:
     st.session_state.messages.append({"role": "user", "content": user_query})
