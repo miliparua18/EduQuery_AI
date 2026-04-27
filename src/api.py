@@ -41,7 +41,7 @@ async def ask(query: str, subject: str = None, chapter: str = None):
 
     print("Original:", query)
 
-    # ✅ rewrite only short queries
+    
     if len(query.split()) < 6:
         improved_query = rewrite_query(query)
     else:
