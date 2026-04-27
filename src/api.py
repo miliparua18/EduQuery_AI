@@ -18,18 +18,34 @@ async def upload_pdf(file: UploadFile = File(...), subject: str = Query(...)):
     
     pages = load_textbook(path)
     chunks = get_chunks(pages, subject)
-    vector_db = built_vector_db(chunks)
+    if vector_db:
+        vector_db.add_documents(chunks)
+    else:
+        vector_db = built_vector_db(chunks)
     return {"message": f"Successfully indexed {subject}"}
 
 @app.get("/ask")
-async def ask(query: str, subject: str = None):
-    if not vector_db: return {"error": "DB not initialized."}
-    
-    retriever = get_filtered_retriever(vector_db, subject)
+async def ask(query: str, subject: str = None, chapter: str = None):
+    if not vector_db:
+        return {"error": "Vector database not initialized."}
+
+    retriever = get_filtered_retriever(vector_db, subject, chapter)
+
     source_docs = retriever.invoke(query)
-    answer = create_tutor_chain(retriever).invoke(query)
-    
-    citations = [{"subject": d.metadata.get("subject"), "page": d.metadata.get("page"), 
-                  "excerpt": d.page_content[:200] + "..."} for d in source_docs]
-    
-    return {"answer": answer, "citations": citations}
+
+    chain = create_tutor_chain(retriever)
+    answer = chain.invoke(query)
+
+    citations = []
+    for d in source_docs:
+        citations.append({
+            "Subject": d.metadata.get("subject"),
+            "Chapter": d.metadata.get("chapter"),
+            "Page": d.metadata.get("page"),
+            "Excerpt": d.page_content[:200].strip() + "..." 
+        })
+
+    return {
+        "answer": answer,
+        "citations": citations
+    }
