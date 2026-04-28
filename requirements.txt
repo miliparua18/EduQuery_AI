@@ -3,6 +3,12 @@ langchain
 langchain-core
 
 
+
+#gemini integrations
+
+langchain-google-genai
+
+
 #Openai integrations
 langchain-openai
 openai
