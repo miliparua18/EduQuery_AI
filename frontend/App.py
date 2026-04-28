@@ -30,14 +30,14 @@ for message in st.session_state.messages:
             with st.expander("📊 Source Citations"):
                 st.dataframe(
                     pd.DataFrame(message["citations"]),
-                    use_container_width=True,
+                    width="stretch",
                     hide_index=True
                 )
 
 user_query = st.chat_input("Ask Questions...")
 
 if user_query:
-    # show user message
+    # store user message
     st.session_state.messages.append({"role": "user", "content": user_query})
 
     with st.chat_message("user"):
@@ -65,10 +65,9 @@ if user_query:
                     with st.expander("📊 Source Citations"):
                         st.dataframe(
                             pd.DataFrame(citations),
-                            use_container_width=True,
+                            width="stretch",
                             hide_index=True
                         )
-
 
             st.session_state.messages.append({
                 "role": "assistant",
