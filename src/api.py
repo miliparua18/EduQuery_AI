@@ -3,14 +3,14 @@ import shutil
 
 from .pdf_loader import load_textbook
 from .chunker import get_chunks
-from .embeddings import built_vector_db, get_existing_db
+from .embeddings import build_vector_db, get_db
 from .retrievers import get_filtered_retriever
 from .Chain import create_tutor_chain
 from .query_rewrite import rewrite_query
 
 app = FastAPI()
 
-vector_db = get_existing_db()
+vector_db = get_db()
 
 
 @app.post("/upload")
@@ -28,7 +28,7 @@ async def upload_pdf(file: UploadFile = File(...), subject: str = Query(...)):
     if vector_db:
         vector_db.add_documents(chunks)
     else:
-        vector_db = built_vector_db(chunks)
+        vector_db = build_vector_db(chunks)
 
     return {"message": f"Successfully indexed {subject}"}
 
@@ -41,7 +41,6 @@ async def ask(query: str, subject: str = None, chapter: str = None):
 
     print("Original:", query)
 
-    
     if len(query.split()) < 6:
         improved_query = rewrite_query(query)
     else:
