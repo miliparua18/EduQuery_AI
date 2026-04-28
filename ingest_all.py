@@ -1,7 +1,7 @@
 import os
 from src.pdf_loader import load_textbook
 from src.chunker import get_chunks
-from src.embeddings import built_vector_db
+from src.embeddings import build_vector_db
 
 def normalize_subject(subject):
     mapping = {
@@ -45,7 +45,7 @@ def run_ingestion():
 
     if all_chunks:
         # ✅ IMPORTANT: this MUST persist DB
-        db = built_vector_db(all_chunks)
+        db = build_vector_db(all_chunks)
         print("Vector Database Ready!")
 
         return db
@@ -53,3 +53,5 @@ def run_ingestion():
 
 if __name__ == "__main__":
     run_ingestion()
+
+
