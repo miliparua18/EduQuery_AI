@@ -1,13 +1,14 @@
 import fitz
 
-
 def load_textbook(file_path):
-    docs = fitz.open(file_path)
     pages = []
-    for i , page in enumerate(docs):
-        pages.append({
-            "text" : page.get_text(),
-            "metadata" : {"page": i+1}
-        })
-    return pages 
+    with fitz.open(file_path) as doc:
+        for i, page in enumerate(doc):
+            text = page.get_text().strip()
+            if text:
+                pages.append({
+                    "text": text,
+                    "metadata": {"page": i + 1}
+                })
+    return pages
         
