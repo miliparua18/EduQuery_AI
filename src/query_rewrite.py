@@ -40,7 +40,6 @@ Rewritten Query:
     try:
         response = llm.invoke(prompt)
         return response.content.strip()
-
     except Exception as e:
         print("Rewrite failed:", e)
         return query
