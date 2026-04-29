@@ -32,7 +32,7 @@ def run_ingestion():
             pages = load_textbook(path)
             chunks = get_chunks(pages, data["subject"])
 
-            # ✅ IMPORTANT: ensure metadata consistency
+            
             for c in chunks:
                 if not c.metadata:
                     c.metadata = {}
@@ -44,7 +44,6 @@ def run_ingestion():
             print(f"File not found: {path}")
 
     if all_chunks:
-        # ✅ IMPORTANT: this MUST persist DB
         db = build_vector_db(all_chunks)
         print("Vector Database Ready!")
 
