@@ -36,7 +36,7 @@ NOT_FOUND:
 Examples:
 
 FOUND:
-A tree is a hierarchical data structure consisting of nodes connected by edges. It is widely used in computer science for representing relationships.
+A Tree is a hierarchical data structure consisting of nodes connected by edges. It is widely used in computer science for representing relationships.
 
 NOT_FOUND:
 This topic is not covered in the selected textbook.
