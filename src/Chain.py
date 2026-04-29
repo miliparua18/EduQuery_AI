@@ -1,42 +1,47 @@
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.prompts import ChatPromptTemplate
-from src.model import get_gemini_model
 from dotenv import load_dotenv
+from src.model import get_gemini_model
 import os
 
 load_dotenv()
 
-# Gemini LLM
-#model = ChatGoogleGenerativeAI(
-    #model="gemini-3-flash-preview",
-    #google_api_key=os.getenv("GOOGLE_API_KEY"),
-    #temperature=0.3
-#)
-
-
 model = get_gemini_model()
-
 
 template = """
 You are an expert University Tutor.
-Review the provided context carefully.
 
-Context: {context}
-Question: {question}
+Use ONLY the provided context.
 
-INSTRUCTIONS:
-1. If the question is foundational (UG level), provide a clear, structured explanation
-   with definitions and simple examples.
-2. If the question is specialized or theoretical (PG level), provide a rigorous
-   technical analysis, mentioning complexity, trade-offs, or mathematical logic
-   found in the text.
-3. If the context contains information from two DIFFERENT subjects for the same term,
-   do not mix them. Instead, explain that the term exists in both and ask the user to clarify.
-4. If the context only covers one subject, provide a detailed grounded answer.
-5. If the context does not contain the answer, politely state you don't have that info.
+Context:
+{context}
 
-Answer:
+Question:
+{question}
+
+RULES:
+1. If the answer is clearly supported by the context, begin your response with:
+FOUND:
+
+2. If the topic is not covered, unrelated, or insufficiently supported by the context, begin your response with:
+NOT_FOUND:
+
+3. Do not invent details.
+4. Keep explanations educational, structured, and concise.
+5. Stay grounded strictly in the provided context.
+6. If multiple subjects are mixed, ask for clarification.
+7. Follow the exact format strictly.
+
+Examples:
+
+FOUND:
+A tree is a hierarchical data structure consisting of nodes connected by edges. It is widely used in computer science for representing relationships.
+
+NOT_FOUND:
+This topic is not covered in the selected textbook.
+
+Now answer strictly in this format.
 """
 
 prompt = ChatPromptTemplate.from_template(template)
@@ -44,7 +49,7 @@ parser = StrOutputParser()
 
 
 def format_docs(docs):
-    return "\n\n".join(doc.page_content for doc in docs)
+    return "\n\n".join(doc.page_content for doc in docs[:3])
 
 
 def create_tutor_chain(retriever):
