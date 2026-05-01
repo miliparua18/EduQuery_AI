@@ -8,7 +8,10 @@ from .embeddings import build_vector_db, get_db
 from .retrievers import get_filtered_retriever
 from .Chain import create_tutor_chain
 from .query_rewrite import rewrite_query
+from .logger import setup_logger
 
+
+logger = setup_logger(__name__)
 app = FastAPI()
 
 vector_db = get_db()
@@ -63,7 +66,7 @@ async def ask(query: str, subject: str = None, chapter: str = None):
     if not vector_db:
         return {"error": "Vector DB not initialized"}
 
-    print("Original:", query)
+    logger.info(f"Original:{query}")
 
     if len(query.split()) < 6:
         improved_query = rewrite_query(query)
