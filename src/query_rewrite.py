@@ -1,4 +1,3 @@
-from langchain_google_genai import ChatGoogleGenerativeAI
 from src.model import get_gemini_model
 from dotenv import load_dotenv
 import os
@@ -39,7 +38,8 @@ Rewritten Query:
 
     try:
         response = llm.invoke(prompt)
-        return response.content.strip()
+        return response.text.strip()
     except Exception as e:
         print("Rewrite failed:", e)
         return query
+    
