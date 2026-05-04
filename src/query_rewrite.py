@@ -14,10 +14,10 @@ llm = get_gemini_model()
 def rewrite_query(query: str, history=None) -> str:
     context = ""
 
-    # 🔹 Add history if exists
+    # Add history if exists
     if history:
         for h in history[-3:]:
-            context += f"User: {h['user']}\nAssistant: {h['bot']}\n"
+            context += f"{h['role'].capitalize()}: {h['content']}\n"
 
     context += f"User Query: {query}"
 
@@ -56,39 +56,4 @@ def rewrite_query(query: str, history=None) -> str:
 
 
 
-    # def rewrite_query(query: str, history=None) -> str:
-#     """
-#     Convert short query into a better semantic-search query.
-#     """
-#     context = ""
-#     if history:
-#         for h in history[-3:]:
-#             context += f"User: {h['user']}\nAssistant: {h['bot']}\n"
-
-#     context += f"User Query: {query}"
-
-
-#     prompt = f"""
-# You are a query rewriting assistant.
-
-# Convert the user question into a clear and detailed search query
-# for a textbook assistant.
-
-# Rules:
-# - Keep the meaning the same
-# - Do not add explanations
-# - Make it suitable for semantic search
-
-# Conversation:
-# {context}
-
-# Rewritten Query:
-# """
-
-#     try:
-#         response = llm.invoke(prompt)
-#         return response.text.strip()
-#     except Exception as e:
-#         print("Rewrite failed:", e)
-#         return query
     
