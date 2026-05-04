@@ -21,6 +21,8 @@ Guidelines:
 9. If the query is already clear and complete, return it unchanged.
 10. Return ONLY one rewritten query.
 11. Do NOT include quotes, prefixes, or labels like "Rewritten Query:" in the output.
+12. If query contains a known concept (like "decision tree"),
+expand it clearly with its domain.
 
 ---
 
