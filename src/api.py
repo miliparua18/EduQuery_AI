@@ -9,16 +9,14 @@ from .retrievers import get_filtered_retriever
 from .Chain import create_tutor_chain
 from .query_rewrite import rewrite_query
 from utils.logger import setup_logger
+from src.subject_router import detect_subject
 
 
 logger = setup_logger(__name__)
-
 app = FastAPI()
 
 vector_db = get_db()
-
 session_memory = {}
-
 
 def get_session(session_id):
     if session_id not in session_memory:
@@ -26,14 +24,9 @@ def get_session(session_id):
 
     session = session_memory[session_id]
 
-    if "history" not in session:
-        session["history"] = []
-
-    if "pending_query" not in session:
-        session["pending_query"] = None
-
-    if "subjects" not in session:
-        session["subjects"] = None
+    session.setdefault("history", [])
+    session.setdefault("pending_query", None)
+    session.setdefault("subjects", None)
 
     return session
 
@@ -45,15 +38,8 @@ def get_chat_history(session_id):
 def update_chat_history(session_id, user_query, assistant_answer):
     session = get_session(session_id)
 
-    session["history"].append({
-        "role": "user",
-        "content": user_query
-    })
-
-    session["history"].append({
-        "role": "assistant",
-        "content": assistant_answer
-    })
+    session["history"].append({"role": "user", "content": user_query})
+    session["history"].append({"role": "assistant", "content": assistant_answer})
 
     session["history"] = session["history"][-12:]
 
@@ -71,33 +57,24 @@ def build_contextual_query(chat_history, current_query):
     if not last_user_messages:
         return current_query
 
-    previous_query = last_user_messages[0]
-
-    return f"{previous_query} -> {current_query}"
+    return f"{last_user_messages[0]} -> {current_query}"
 
 
-def detect_ambiguity(source_docs, query, threshold=0.6):
-    subjects = list(set(d.metadata.get("subject", "Unknown") for d in source_docs))
-    print("source_docs : ", source_docs)
-    print("subject: ", subjects)
-    if  len(subjects) > 1:
-        return True, subjects
 
-    subject_counts = Counter(
+def detect_ambiguity(source_docs, query):
+    subjects = list(set(
         d.metadata.get("subject", "Unknown") for d in source_docs
-    )
+    ))
 
+    # remove Unknown noise if needed
+    subjects = [s for s in subjects if s != "Unknown"]
 
-    if len(subject_counts) <= 1:
-        return False, subjects
-
-    total = sum(subject_counts.values())
-    dominant_ratio = max(subject_counts.values()) / total
-
-    if dominant_ratio < threshold:
+    # STRICT RULE: more than one subject = ambiguous
+    if len(subjects) > 1:
         return True, subjects
 
     return False, subjects
+
 
 
 
@@ -121,6 +98,7 @@ async def upload_pdf(file: UploadFile = File(...), subject: str = Query(...)):
     return {"message": f"Successfully indexed {subject}"}
 
 
+
 @app.get("/ask")
 async def ask(
     query: str,
@@ -133,7 +111,7 @@ async def ask(
 
     session = get_session(session_id)
 
-    
+   
     if session["subjects"]:
         matched_subject = None
 
@@ -149,7 +127,7 @@ async def ask(
             session["pending_query"] = None
             session["subjects"] = None
 
-    logger.info(f"Original:{query}")
+    logger.info(f"Original: {query}")
 
     chat_history = get_chat_history(session_id)
 
@@ -165,26 +143,53 @@ async def ask(
     retriever = get_filtered_retriever(vector_db, subject, chapter)
 
     if subject is None or str(subject).strip().lower() == "all":
-        temp_retriever = vector_db.as_retriever(search_kwargs={"k": 10})
-        source_docs = temp_retriever.invoke(improved_query)
-    else:
-        source_docs = retriever.invoke(improved_query)
 
-    # Ambiguity detection
-    if subject is None or str(subject).strip().lower() == "all":
-        is_ambiguous, subjects = detect_ambiguity(source_docs, query)
+        predicted_subject = detect_subject(improved_query)
+        logger.info(f"Detected subject: {predicted_subject}")
 
-        if is_ambiguous:
-            session["pending_query"] = query
-            session["subjects"] = subjects
-
+        if predicted_subject == "UNKNOWN":
             return {
                 "original_query": query,
                 "improved_query": improved_query,
-                "answer": f"Your query relates to multiple subjects: {', '.join(subjects)}. Please specify one subject.",
+                "answer": "Your query is ambiguous. Please specify a subject .",
                 "citations": []
             }
 
+        subject = predicted_subject
+
+   
+    source_docs = retriever.invoke(improved_query)
+    # print(source_docs)
+    # results = vector_db._collection.query(
+    #         query_texts=[improved_query],
+    #         n_results=5,
+    #         include=["documents", "metadatas", "distances"]
+    #     )
+
+    # docs = results["documents"][0]
+    # metas = results["metadatas"][0]
+    # scores = results["distances"][0]
+    # print("scores: ", scores)
+    # for doc, meta, score in zip(docs, metas, scores):
+
+    #     confidence = 1 - score
+
+    #     print("Score: ", confidence)
+    #     print("metadat:", meta)
+    is_ambiguous, subjects = detect_ambiguity(source_docs, query)
+
+    if is_ambiguous:
+        session["pending_query"] = query
+        session["subjects"] = subjects
+
+        return {
+            "original_query": query,
+            "improved_query": improved_query,
+            "answer": f"Your query relates to multiple subjects: {', '.join(subjects)}. Please specify one subject.",
+            "citations": []
+        }
+
+    
     chain = create_tutor_chain(retriever)
 
     try:
@@ -196,15 +201,13 @@ async def ask(
         print("Chain error:", e)
         raw_answer = "NOT_FOUND: Unable to generate answer right now."
 
+    
     citations = []
 
     if raw_answer.startswith("FOUND:"):
         answer = raw_answer.replace("FOUND:", "").strip()
 
-
-
         final_docs = retriever.invoke(improved_query)
-
         citations = []
 
         for d in final_docs:
@@ -214,7 +217,9 @@ async def ask(
                 "Page": d.metadata.get("page"),
                 "Excerpt": d.page_content[:200].strip() + "..."
             })
-
+    
+    
+    
     elif raw_answer.startswith("NOT_FOUND:"):
         answer = raw_answer.replace("NOT_FOUND:", "").strip()
 
@@ -229,14 +234,6 @@ async def ask(
         "answer": answer,
         "citations": citations
     }
-
-
-
-
-
-
-
-
 
 
 
