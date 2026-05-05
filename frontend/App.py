@@ -28,16 +28,11 @@ for message in st.session_state.messages:
 
         if "citations" in message and message["citations"]:
             with st.expander("📊 Source Citations"):
-                st.dataframe(
-                    pd.DataFrame(message["citations"]),
-                    width="stretch",
-                    hide_index=True
-                )
+                st.dataframe(pd.DataFrame(message["citations"]), width="stretch")
 
 user_query = st.chat_input("Ask Questions...")
 
 if user_query:
-    # store user message
     st.session_state.messages.append({"role": "user", "content": user_query})
 
     with st.chat_message("user"):
@@ -49,31 +44,20 @@ if user_query:
             "subject": mapped_subject
         }
 
-        try:
-            response = requests.get(
-                "http://127.0.0.1:8000/ask",
-                params=params
-            ).json()
+        response = requests.get("http://127.0.0.1:8000/ask", params=params).json()
 
-            answer = response.get("answer", "No answer found.")
-            citations = response.get("citations", [])
+        answer = response.get("answer", "No answer found.")
+        citations = response.get("citations", [])
 
-            with st.chat_message("assistant"):
-                st.write(answer)
+        with st.chat_message("assistant"):
+            st.write(answer)
 
-                if citations:
-                    with st.expander("📊 Source Citations"):
-                        st.dataframe(
-                            pd.DataFrame(citations),
-                            width="stretch",
-                            hide_index=True
-                        )
+            if citations:
+                with st.expander("📊 Source Citations"):
+                    st.dataframe(pd.DataFrame(citations), width="stretch")
 
-            st.session_state.messages.append({
-                "role": "assistant",
-                "content": answer,
-                "citations": citations
-            })
-
-        except Exception as e:
-            st.error(f"Error: {e}")
+        st.session_state.messages.append({
+            "role": "assistant",
+            "content": answer,
+            "citations": citations
+        })
