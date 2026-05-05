@@ -33,19 +33,6 @@ def rewrite_query(query: str, history=None) -> str:
         response = llm.invoke(messages)
         return response.text.strip()
 
-        # content = response.content
-
-        # if isinstance(content, list):
-        #     content = " ".join(
-        #         item.get("text", str(item)) if isinstance(item, dict) else str(item)
-        #         for item in content
-        #     )
-
-        # rewritten = str(content).strip()
-        # rewritten = rewritten.split("\n")[0].replace('"', "")
-
-        # return rewritten
-
     except Exception as e:
         print("Rewrite failed:", e)
         return query
