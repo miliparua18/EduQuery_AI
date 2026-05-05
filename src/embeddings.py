@@ -23,10 +23,20 @@ def get_db():
     )
 
 
-def build_vector_db(docs):
+# def build_vector_db(docs):
+#     db = Chroma.from_documents(
+#         documents=docs,
+#         embedding=get_huggingface_model(),
+#         persist_directory=CHROMA_DB_DIR
+#     )
+#     return db
+
+
+def build_vector_db(docs):    
     db = Chroma.from_documents(
         documents=docs,
         embedding=get_huggingface_model(),
-        persist_directory=CHROMA_DB_DIR
+        persist_directory=CHROMA_DB_DIR,
+        collection_metadata={"hnsw:space": "cosine"} 
     )
     return db
